@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Аудиоплеер для Android — спецификация v3.0</title>
+<style>
+  :root {
+    --bg: #0f1115; --surface: #171a21; --surface-2: #1e222b;
+    --border: #2a2f3a; --text: #e6e8ec; --text-dim: #9aa3b2;
+    --accent: #6ea8fe; --green: #7ee787; --warn: #f0b72f;
+    --danger: #ff7b72; --purple: #d2a8ff; --code-bg: #0b0d11;
+    --pink: #ff9ec7;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; font-size: 15px;
+  }
+  .container { max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px; }
+  header.hero { border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 28px; }
+  header.hero h1 { margin: 0 0 8px; font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  header.hero p { margin: 4px 0; color: var(--text-dim); font-size: 14px; }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    background: rgba(110, 168, 254, 0.15); color: var(--accent); margin: 10px 6px 0 0;
+  }
+  .badge.green { background: rgba(126, 231, 135, 0.15); color: var(--green); }
+  .badge.purple { background: rgba(210, 168, 255, 0.15); color: var(--purple); }
+  .badge.pink { background: rgba(255, 158, 199, 0.15); color: var(--pink); }
+  nav.toc {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; margin-bottom: 36px;
+  }
+  nav.toc h2 { margin: 0 0 12px; font-size: 16px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  nav.toc ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 36px; }
+  nav.toc li { margin-bottom: 6px; break-inside: avoid; }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  section { margin-bottom: 44px; scroll-margin-top: 20px; }
+  section > h2 {
+    font-size: 24px; font-weight: 700; margin: 0 0 16px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border); letter-spacing: -0.01em;
+  }
+  section h3 { font-size: 17px; font-weight: 600; margin: 24px 0 12px; color: var(--accent); }
+  section h3.purple { color: var(--purple); }
+  section p { margin: 0 0 12px; }
+  section ul, section ol { margin: 0 0 16px; padding-left: 24px; }
+  section li { margin-bottom: 8px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+  .card h3:first-child { margin-top: 0; }
+  .card.blue { border-left: 3px solid var(--accent); }
+  .card.green { border-left: 3px solid var(--green); }
+  .card.purple { border-left: 3px solid var(--purple); }
+  .decision { background: rgba(126, 231, 135, 0.07); border-left: 3px solid var(--green); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; }
+  .decision strong { color: var(--green); }
+  .warnbox { background: rgba(240, 183, 47, 0.08); border-left: 3px solid var(--warn); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; }
+  .warnbox strong { color: var(--warn); }
+  .fixbox { background: rgba(210, 168, 255, 0.08); border-left: 3px solid var(--purple); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; }
+  .fixbox strong { color: var(--purple); }
+  .dangerbox { background: rgba(255, 123, 114, 0.08); border-left: 3px solid var(--danger); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; }
+  .dangerbox strong { color: var(--danger); }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; background: var(--surface); }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; color: var(--text-dim); font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; }
+  tr:last-child td { border-bottom: none; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  .table-wrap table { margin: 0; min-width: 680px; }
+  code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-family: "SF Mono", Monaco, Consolas, "Liberation Mono", monospace; font-size: 13px; color: #d1d5db; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 12px 0; }
+  pre code { background: none; padding: 0; color: #d1d5db; }
+  .diagram { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-family: "SF Mono", Monaco, Consolas, monospace; font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; color: #9aa3b2; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .muted { color: var(--text-dim); }
+  .req { color: var(--pink); font-family: monospace; font-size: 12px; white-space: nowrap; }
+  .status { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .status.core { color: var(--green); background: rgba(126, 231, 135, 0.12); }
+  .status.later { color: var(--purple); background: rgba(210, 168, 255, 0.12); }
+  .status.hw { color: var(--warn); background: rgba(240, 183, 47, 0.12); }
+  a { color: var(--accent); }
+  footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 13px; text-align: center; }
+  @media (max-width: 720px) {
+    .container { padding: 24px 14px 60px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    nav.toc ol { columns: 1; }
+    header.hero h1 { font-size: 25px; }
+    .card { padding: 16px; }
+  }
+  @media print {
+    body { background: white; color: #111; }
+    .card, nav.toc, th, .table-wrap { background: white; }
+    .container { max-width: none; }
+    a { color: #0645ad; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="hero">
+  <h1>Аудиоплеер для Android</h1>
+  <p><strong>Продуктовые требования и архитектурная спецификация · v3.0 · 3 ноября 2026</strong></p>
+  <p>Полный объём продукта. Документ заменяет противоречивые редакции v1.0/v2.x и служит базой для реализации и приёмки.</p>
+  <div>
+    <span class="badge">Android 10+ · minSdk 29</span>
+    <span class="badge green">Kotlin · Compose · Rust · Oboe C++</span>
+    <span class="badge purple">Google Play + прямое распространение</span>
+    <span class="badge pink">Local-first · DSP · Direct PCM · плагины</span>
+  </div>
+</header>
+
+<div class="decision">
+  <strong>Зафиксированные решения:</strong> создаётся нативное Android-приложение; нативный вывод строится на Oboe C++ с декодированием и DSP на Rust; функционал исходного документа не сокращается; поддерживаются Store- и Direct-сборки; первый пользовательский стенд — телефон и Bluetooth; JDK, Android SDK и Rust при реализации размещаются локально внутри проекта.
+</div>
+<div class="warnbox">
+  <strong>Полный объём ≠ одновременная неуправляемая разработка.</strong> Все функции остаются в продуктовом плане, но внедряются через проверяемые этапы. Переход дальше разрешён после прохождения критериев предыдущего этапа. USB/DSD считаются реализованными только после аппаратной приёмки, а не после появления переключателя в UI.
+</div>
+
+<nav class="toc">
+  <h2>Содержание</h2>
+  <ol>
+    <li><a href="#vision">Видение и принципы</a></li>
+    <li><a href="#requirements">Полные требования</a></li>
+    <li><a href="#ux">Пользовательский опыт</a></li>
+    <li><a href="#distribution">Два канала распространения</a></li>
+    <li><a href="#stack">Технологический стек</a></li>
+    <li><a href="#modules">Модули и зависимости</a></li>
+    <li><a href="#state">Состояние и навигация</a></li>
+    <li><a href="#data">Модель данных</a></li>
+    <li><a href="#scanner">Библиотека и сканирование</a></li>
+    <li><a href="#native">Нативная архитектура</a></li>
+    <li><a href="#formats">Форматы и декодеры</a></li>
+    <li><a href="#gapless">Gapless, seek и SRC</a></li>
+    <li><a href="#dsp">DSP и real-time</a></li>
+    <li><a href="#replaygain">ReplayGain</a></li>
+    <li><a href="#output-modes">Режимы вывода</a></li>
+    <li><a href="#bitperfect">Direct PCM и bit-perfect</a></li>
+    <li><a href="#dsd">DSD, DoP и UAC2</a></li>
+    <li><a href="#service">Сервис, Bluetooth и Android Auto</a></li>
+    <li><a href="#plugins">Плагины и скины</a></li>
+    <li><a href="#metadata">Метаданные и сеть</a></li>
+    <li><a href="#performance">Память, скорость и батарея</a></li>
+    <li><a href="#reliability">Надёжность и безопасность</a></li>
+    <li><a href="#testing">Тестирование и приёмка</a></li>
+    <li><a href="#roadmap">План реализации полного объёма</a></li>
+    <li><a href="#done">Definition of Done</a></li>
+    <li><a href="#open">Открытые решения и changelog</a></li>
+  </ol>
+</nav>
+
+<section id="vision">
+  <h2>1. Видение и принципы</h2>
+  <div class="card blue">
+    <p><strong>Продукт:</strong> быстрый локальный Android-плеер с собственным аудиотрактом, серьёзным DSP, удобной библиотекой, честной диагностикой вывода и расширяемой платформой.</p>
+    <p><strong>Ориентиры по возможностям, а не по копированию UI:</strong> Poweramp — звук и настройки выхода; USB Audio Player PRO — работа с ЦАП; Neutron — организация метаданных; Symfonium — профили и перенос настроек; Musicolet — очередь и офлайн-удобства; foobar2000 — ReplayGain и многозначные теги.</p>
+  </div>
+  <ul>
+    <li><strong>Local-first:</strong> локальная библиотека и воспроизведение не зависят от сети и аккаунтов.</li>
+    <li><strong>Один источник истины:</strong> очередь, теги, настройки и состояние вывода не дублируются независимыми автоматами.</li>
+    <li><strong>Честная диагностика:</strong> приложение не называет тракт bit-perfect только потому, что пользователь включил опцию.</li>
+    <li><strong>RT-дисциплина:</strong> аудиоколбэк не выполняет I/O, JNI, блокировки и работу с кучей.</li>
+    <li><strong>Никаких скрытых изменений:</strong> онлайн-теги, DSP fallback и запись в исходные файлы требуют понятного поведения и подтверждения.</li>
+    <li><strong>Измерения вместо обещаний:</strong> скорость, энергопотребление, SIMD и качество тракта подтверждаются тестами.</li>
+  </ul>
+</section>
+
+<section id="requirements">
+  <h2>2. Полные требования</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Требование</th><th>Приёмочный результат</th></tr></thead>
+    <tbody>
+      <tr><td class="req">PERF-01</td><td>Отзывчивый UI и большие библиотеки</td><td>10 000+ треков; диск и сеть не выполняются в main thread; прокрутка и поиск проходят бюджеты из раздела 21.</td></tr>
+      <tr><td class="req">PERF-02</td><td>Ограниченные RAM и энергопотребление</td><td>Ограниченные кэши, отсутствие утечек FD/памяти, длительный battery-тест на эталонном телефоне.</td></tr>
+      <tr><td class="req">COMP-01</td><td>Android 10+</td><td>minSdk 29; различия API 29–34+ изолированы, отдельных кодовых веток приложения нет.</td></tr>
+      <tr><td class="req">PLAY-01</td><td>MP3, AAC, Vorbis, Opus, FLAC, ALAC, WAV</td><td>Каждый формат проходит соответствующую матрицу декодирования; неподдерживаемый профиль даёт понятную ошибку, а не падение.</td></tr>
+      <tr><td class="req">PLAY-02</td><td>Gapless</td><td>Sample-accurate переходы там, где формат и режим вывода это позволяют; ограничения показаны в диагностике.</td></tr>
+      <tr><td class="req">PLAY-03</td><td>Качественный SRC</td><td>Rubato либо эквивалент с измеренными характеристиками; отключается в Direct PCM.</td></tr>
+      <tr><td class="req">DSP-01</td><td>Параметрический EQ и пресеты</td><td>Изменение коэффициентов без щелчков и пересоздания состояния фильтров; встроенные и пользовательские пресеты.</td></tr>
+      <tr><td class="req">DSP-02</td><td>AutoEQ</td><td>Импорт ParametricEQ-профилей, проверка фильтров, АЧХ, привязка к устройству вывода.</td></tr>
+      <tr><td class="req">DSP-03</td><td>ReplayGain и защита от клиппинга</td><td>Off/Track/Album/Auto, preamp, track/album peaks, limiter и диагностика срабатываний.</td></tr>
+      <tr><td class="req">LIB-01</td><td>/Music и пользовательские папки</td><td>MediaStore + SAF; первый запуск с понятным разрешением; добавление, удаление и повторное сканирование корней.</td></tr>
+      <tr><td class="req">LIB-02</td><td>Инкрементальное сканирование</td><td>Новые/изменённые/пропавшие файлы обрабатываются отдельно; история и плейлисты не теряются.</td></tr>
+      <tr><td class="req">META-01</td><td>Теги, обложки, тексты</td><td>Встроенные теги и обложки, sidecar LRC, онлайн-поиск с preview, кэш и явное применение изменений.</td></tr>
+      <tr><td class="req">META-02</td><td>Распознавание по содержимому</td><td>Chromaprint/AcoustID для локального файла без микрофона; микрофонное распознавание — отдельная функция.</td></tr>
+      <tr><td class="req">LIST-01</td><td>Плейлисты</td><td>CRUD, multi-select, drag-and-drop, пользовательская обложка, M3U8 import/export, backup/restore.</td></tr>
+      <tr><td class="req">LIST-02</td><td>История и подборки</td><td>Часто прослушиваемые, недавно прослушанные, избранное; история хранится отдельными событиями.</td></tr>
+      <tr><td class="req">SEARCH-01</td><td>Поиск и фильтры</td><td>По библиотеке, выбранным корням или всему доступному MediaStore; длительность/размер/формат; быстрый поиск внутри текущего списка.</td></tr>
+      <tr><td class="req">QUEUE-01</td><td>Очередь, shuffle, repeat</td><td>Play Next/Add to Queue/редактирование/очистка; сохранение позиции и порядка после process death.</td></tr>
+      <tr><td class="req">OS-01</td><td>Интеграция с Android</td><td>MediaStyle, Bluetooth AVRCP, AudioFocus, noisy route, Android Auto с библиотекой и поиском.</td></tr>
+      <tr><td class="req">EXT-01</td><td>Плагины и скины</td><td>Отдельные APK, версионированный SDK, AIDL/FD/SDUI, разрешения пользователя, безопасные JSON-токены оформления.</td></tr>
+      <tr><td class="req">BP-01</td><td>Direct PCM / bit-perfect</td><td>Только на поддерживаемых маршрутах; фактический тракт и fallback видны; подтверждение на аппаратной матрице.</td></tr>
+      <tr><td class="req">DSD-01</td><td>DSF/DFF, DSD→PCM, DoP, Native DSD</td><td>Безопасный fallback, защита от вывода DoP на несовместимый ЦАП, hot-unplug и аппаратные тесты.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted"><span class="status core">Ядро</span> — обязательная основа продукта. <span class="status hw">Аппаратно</span> — нельзя принять без соответствующего устройства. <span class="status later">Платформа</span> — входит в полный объём, но зависит от стабильного ядра.</p>
+</section>
+
+<section id="ux">
+  <h2>3. Пользовательский опыт</h2>
+  <h3>3.1 Основные экраны</h3>
+  <ul>
+    <li><strong>Библиотека:</strong> треки, альбомы, исполнители, album artists, жанры, папки, недавно добавленные.</li>
+    <li><strong>Сейчас играет:</strong> обложка, управление, очередь, текст, техническая информация и избранное.</li>
+    <li><strong>Очередь:</strong> Play Next, Add to Queue, изменение порядка, удаление, очистка, возврат к исходному порядку shuffle.</li>
+    <li><strong>Эквалайзер:</strong> полосы, preamp, АЧХ, пресеты, AutoEQ и профиль текущего устройства.</li>
+    <li><strong>Аудиотракт:</strong> источник → декодер → DSP/SRC → фактический Oboe stream → маршрут → состояние Direct/fallback.</li>
+    <li><strong>Плейлисты и история:</strong> обложки, импорт/экспорт, частые и недавние прослушивания.</li>
+    <li><strong>Настройки:</strong> библиотека, звук, устройства, сеть и приватность, оформление, плагины, backup.</li>
+  </ul>
+  <h3>3.2 Функции, позаимствованные у аналогов</h3>
+  <div class="grid-2">
+    <div class="card green">
+      <h3>Включаются в продукт</h3>
+      <ul>
+        <li>Отдельные EQ/AutoEQ/preamp для динамика, проводного выхода, Bluetooth и конкретного USB-ЦАП.</li>
+        <li>Multi-select, сортировки, поиск внутри списка, таймер сна по времени и по числу треков.</li>
+        <li>Редактор тегов одного трека и пакетный редактор с preview.</li>
+        <li>Вычисление ReplayGain для файлов без тегов, результат хранится в БД; запись в файл — отдельное действие.</li>
+        <li>M3U8 и версионированный JSON-backup настроек, EQ, плейлистов, избранного и истории.</li>
+        <li>Несколько исполнителей/жанров, composer, sort name и MusicBrainz IDs.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Не блокируют основную версию</h3>
+      <ul>
+        <li>Несколько независимых именованных очередей.</li>
+        <li>Chromecast, UPnP renderer, Wear OS UI и виджеты рабочего стола.</li>
+        <li>Waveform, визуализаторы, crossfeed/reverb/tempo/pitch.</li>
+        <li>Облачная синхронизация между устройствами.</li>
+      </ul>
+      <p class="muted">Это кандидаты после выполнения исходного полного объёма, а не скрытое расширение текущего проекта.</p>
+    </div>
+  </div>
+  <h3>3.3 Доступность и приватность</h3>
+  <ul>
+    <li>Material 3, тёмная и светлая темы, динамические цвета как опция, контраст и TalkBack.</li>
+    <li>Масштаб шрифта до 200%, уменьшение анимации, доступные actions без жестов-дублёров.</li>
+    <li>Телеметрия выключена по умолчанию; отдельный режим «без сети» блокирует все сетевые обогащения.</li>
+    <li>Онлайн-запросы не отправляют всю библиотеку; каждый провайдер имеет понятную политику кэша.</li>
+  </ul>
+</section>
+
+<section id="distribution">
+  <h2>4. Два канала распространения</h2>
+  <div class="decision"><strong>Единое ядро, два product flavor:</strong> <code>store</code> для Google Play и <code>direct</code> для APK/GitHub/F-Droid. Различия находятся в интеграционном слое, а не в аудиодвижке и библиотеке.</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Возможность</th><th>Store</th><th>Direct</th></tr></thead>
+    <tbody>
+      <tr><td>Локальная библиотека, DSP, плейлисты, Bluetooth</td><td>Полностью</td><td>Полностью</td></tr>
+      <tr><td>Direct PCM / USB / DSD</td><td>На поддерживаемых устройствах</td><td>На поддерживаемых устройствах</td></tr>
+      <tr><td>Публичный SDK и безопасные плагины</td><td>Только варианты, допустимые политикой и правилами платформы</td><td>Полный механизм обнаружения сторонних APK</td></tr>
+      <tr><td>Сервисные коннекторы</td><td>Разрешённые магазином реализации</td><td>Отдельно устанавливаемые расширенные коннекторы</td></tr>
+      <tr><td>Обновления</td><td>Google Play</td><td>Подписанные релизы и явная установка пользователем</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>Store-артефакт не содержит заблокированного кода, который включается скрыто после публикации.</li>
+    <li>Package name, подпись и совместимость обновлений между каналами фиксируются до первого релиза. При разных applicationId миграция выполняется через backup/restore.</li>
+    <li>Токены плагинов не входят в общий backup и не передаются между каналами без повторной авторизации.</li>
+  </ul>
+</section>
+
+<section id="stack">
+  <h2>5. Технологический стек</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Слой</th><th>Решение</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td>UI</td><td>Kotlin, Jetpack Compose, Material 3</td><td>Экраны, accessibility, skin tokens.</td></tr>
+      <tr><td>DI / навигация</td><td>Hilt, Navigation Compose с типобезопасными маршрутами</td><td>Граф зависимостей и восстановление навигации.</td></tr>
+      <tr><td>Данные</td><td>Room, FTS4 external content, DataStore</td><td>Библиотека, очередь, история, небольшие настройки и checkpoint.</td></tr>
+      <tr><td>Файлы</td><td>MediaStore, SAF/DocumentsContract, ParcelFileDescriptor</td><td>Индексация и доступ без обхода Scoped Storage.</td></tr>
+      <tr><td>OS playback</td><td>Media3 MediaLibraryService + SimpleBasePlayer</td><td>Уведомление, контроллеры, Bluetooth, Android Auto.</td></tr>
+      <tr><td>Нативный контроллер</td><td>C++17, JNI, Oboe</td><td>Владение output stream, маршрутом и reconnect; JNI только здесь.</td></tr>
+      <tr><td>Audio core</td><td>Rust stable, staticlib + C ABI</td><td>Декодирование, DSP, SRC, gapless, ring buffers и события.</td></tr>
+      <tr><td>Декодеры</td><td>Symphonia, libopus, AMediaCodec fallback</td><td>PCM и compressed sources по матрице раздела 11.</td></tr>
+      <tr><td>Теги</td><td>lofty + отдельный CUE parser</td><td>Чтение и явная запись метаданных.</td></tr>
+      <tr><td>Сборка native</td><td>NDK, CMake для C++/Oboe, Cargo для Rust</td><td>Воспроизводимые ABI arm64-v8a и armeabi-v7a; остальные ABI по необходимости тестов.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="fixbox"><strong>Почему не «чистый Rust + Oboe»:</strong> Oboe — C++-библиотека. Поэтому C++ является осознанной частью native-архитектуры. Kotlin вызывает C++ через JNI; C++ вызывает Rust только через стабильный C ABI. Rust не знает о JNI и Android UI.</div>
+  <ul>
+    <li>Версии JDK, AGP, Kotlin, Compose, NDK, Rust и крейтов фиксируются lock-файлами и version catalog.</li>
+    <li>Локальные toolchain-каталоги не попадают в дистрибутив и системные настройки пользователя.</li>
+    <li>Media3 ExoPlayer не декодирует музыку. AMediaCodec разрешён как отдельный decoder backend, а не как замена архитектуре плеера.</li>
+  </ul>
+</section>
+
+<section id="modules">
+  <h2>6. Модули и зависимости</h2>
+  <div class="diagram">:app                              — flavors, DI root, MainActivity, navigation
+│
+├── :core:model                   — Track, Album, Queue, OutputDiagnostics…
+├── :core:common                  — Result, dispatchers, time, utilities
+├── :core:database                — Room, DAO, FTS4, migrations, backup schema
+├── :core:datastore               — настройки и position checkpoint
+├── :core:library                 — MediaStore/SAF scanner, roots, CUE
+├── :core:network                 — LRCLIB, AcoustID, MusicBrainz, covers
+├── :core:designsystem            — Material 3 и skin tokens
+│
+├── :player:api                   — Player facade, QueueManager contracts
+├── :player:service               — MediaLibraryService, focus, routes, noisy
+├── :player:engine                — Kotlin AudioEngine + единственный JNI boundary
+│
+├── :native
+│   ├── cpp/                      — JNI adapter, OboeOutput, reconnect, C ABI bridge
+│   ├── rust/
+│   │   ├── decoder/              — Symphonia, Opus, MediaCodec adapter boundary
+│   │   ├── dsp/                  — PEQ, AutoEQ, RG, SRC, limiter, dither
+│   │   ├── buffer/               — SPSC rings, triple_buffer, basedrop
+│   │   └── transport/            — current/next decoder, не бизнес-очередь
+│   └── test/                     — golden PCM, RT и C/C++ tests
+│
+├── :feature:library              — songs/albums/artists/genres/folders
+├── :feature:player               — Now Playing, lyrics, queue, output path
+├── :feature:playlists            — CRUD, covers, M3U8, drag-and-drop
+├── :feature:equalizer            — PEQ, AutoEQ, АЧХ, output profiles
+├── :feature:search               — global и scoped search
+├── :feature:plugins              — SDK discovery, permissions, SDUI, skins
+├── :feature:settings             — settings, backup, diagnostics
+│
+├── :plugin-sdk                   — независимый AAR/AIDL без ссылок на :app
+└── :sync                         — WorkManager для разрешённых фоновых задач</div>
+  <ul>
+    <li>Features зависят от <code>:player:api</code>, а не от JNI, Oboe или Rust.</li>
+    <li>Модули создаются вместе с реальным кодом; пустые модули «на будущее» не плодятся.</li>
+    <li><code>:plugin-sdk</code> версионируется отдельно и не раскрывает внутренние Room/Compose-модели.</li>
+    <li>MediaCodec backend может потребовать C++ NDK-адаптер; это не переносит очередь или DSP в Android framework.</li>
+  </ul>
+</section>
+
+<section id="state">
+  <h2>7. Состояние, очередь и навигация</h2>
+  <div class="decision"><strong>QueueManager в Kotlin — единственный владелец музыкальной очереди.</strong> Media3 является адаптером для контроллеров; Rust получает только current/next source и не принимает решения о shuffle, repeat или следующем элементе бизнес-очереди.</div>
+  <div class="diagram">UI / Bluetooth / Auto / Assistant
+             │ commands
+             ▼
+MediaLibrarySession + SimpleBasePlayer adapter
+             │
+             ▼
+     PlaybackController
+             │
+             ├──► QueueManager ──► Room (queue + original order + seed)
+             │
+             ├──► AudioEngine ───► JNI/C++ ──► Rust current/next
+             │
+             └──► OutputProfiles / Settings</div>
+  <h3>7.1 Правила очереди</h3>
+  <ul>
+    <li>Очередь хранит стабильные <code>queueItemId</code> и <code>trackId</code>, а не только позиции в списке.</li>
+    <li>Shuffle имеет область <code>ALL / FOLDER / ALBUM / PLAYLIST / CUSTOM_QUEUE</code>; исходный порядок и seed сохраняются.</li>
+    <li>Repeat: <code>OFF / ONE / QUEUE</code>. Переход рассчитывается один раз в Kotlin.</li>
+    <li>При shuffle без повторов каждый элемент звучит один раз до нового цикла; новые элементы добавляются по детерминированному правилу.</li>
+    <li>Очередь и currentIndex записываются транзакционно. Position checkpoint обновляется каждые 5–10 секунд и на pause/stop/track change/background.</li>
+    <li>После смерти процесса очередь восстанавливается без неожиданного автозапуска звука.</li>
+  </ul>
+  <h3>7.2 UI state</h3>
+  <ul>
+    <li>MVI/UDF: устойчивое состояние — <code>StateFlow&lt;UiState&gt;</code>, one-off события — <code>Channel&lt;UiEffect&gt;</code>.</li>
+    <li>Позиция и FFT не входят в общий UiState. Текстовое время обновляется с низкой частотой, плавный seekbar — в фазе отрисовки.</li>
+    <li>Типобезопасные маршруты Navigation Compose и SavedStateHandle используются для восстановления экрана.</li>
+    <li>Асинхронные методы SimpleBasePlayer завершаются только после отражения команды в Player state; события native engine вызывают <code>invalidateState()</code>.</li>
+  </ul>
+</section>
+
+<section id="data">
+  <h2>8. Модель данных</h2>
+  <h3>8.1 Основные сущности</h3>
+  <pre><code>LibraryRoot { id, type, uri, displayName, enabled, lastScanAt, lastGeneration }
+Track {
+  id, uri, sourceType, volumeName, documentId, relativePath,
+  startOffsetMs, endOffsetMs, title, sortTitle,
+  albumId, albumArtistName, durationMs, trackNumber, discNumber,
+  year, originalDate, bitrate, sampleRate, channels, bitDepth, format,
+  fileSizeBytes, fileModifiedAt, contentGeneration, dateAdded,
+  lastPlayedAt, playCount, isFavorite, isMissing,
+  replayGainTrackDb, replayGainTrackPeak,
+  replayGainAlbumDb, replayGainAlbumPeak,
+  musicBrainzTrackId, embeddedArtworkId, lyricsId
+}
+Artist { id, name, sortName, musicBrainzArtistId }
+TrackArtist { trackId, artistId, role, position }       // artist, albumArtist, composer…
+Album { id, title, sortTitle, albumArtistId, year, musicBrainzReleaseId }
+Genre { id, name }
+TrackGenre { trackId, genreId }
+Artwork { id, source, uriOrPath, width, height, hash, updatedAt }</code></pre>
+  <p><code>UNIQUE(uri, startOffsetMs)</code> сохраняется для CUE. Отдельно ведётся сопоставление MediaStore/SAF-представлений одного файла, чтобы гибридное сканирование не создавало дубликаты.</p>
+  <h3>8.2 Плейлисты, очередь и история</h3>
+  <pre><code>Playlist { id, name, description, coverArtworkId, isSystem, createdAt, updatedAt }
+PlaylistTrack { playlistId, trackId, position: Long, addedAt }
+PlaybackQueue { id, currentQueueItemId, shuffleScope, shuffleSeed, repeatMode, ... }
+QueueItem { id, queueId, trackId, position, originalPosition, sourceContext }
+PlayHistory { id, trackId, startedAt, endedAt, playedMs, completed, outputDeviceKey }</code></pre>
+  <ul>
+    <li>Позиции начинаются с шага 1024 и используют midpoint. При исчерпании промежутка выполняется транзакционная перебалансировка всего затронутого списка.</li>
+    <li>Drag-and-drop подтверждается одной БД-транзакцией после завершения жеста, а не серией конкурирующих записей.</li>
+    <li>Событие для play count фиксируется по единому правилу: трек длиннее 30 секунд, прослушана половина или 4 минуты — что наступит раньше; повторный seek не накручивает счётчик.</li>
+    <li>Мягкое <code>isMissing</code> сохраняет статистику и связи. Восстановление файла снимает флаг после проверки идентичности.</li>
+  </ul>
+  <h3>8.3 Звук, кэш и расширения</h3>
+  <pre><code>EqPreset { id, name, isBuiltIn, preampDb }
+EqBand { id, presetId, bandType, frequencyHz, gainDb, q, position }
+AutoEqProfile { id, name, source, filtersJson, sourceHash }
+OutputDeviceProfile {
+  id, deviceKey, deviceType, displayName,
+  eqPresetId, autoEqProfileId, outputMode, replayGainMode,
+  srcQuality, hardwareVolumePreferred
+}
+Lyrics { id, trackId, provider, plainText, syncedLrc, offsetMs, fetchedAt }
+MetadataCandidate { id, trackId, provider, payload, confidence, status, fetchedAt }
+InstalledPlugin {
+  id, packageName, type, apiVersion, versionCode,
+  signatureHash, grantedCapabilities, isEnabled
+}</code></pre>
+  <div class="fixbox"><strong>Удалено поле <code>Track.bitPerfectCapable</code>.</strong> Возможность Direct/bit-perfect вычисляется для комбинации «трек + текущий маршрут + ОС + фактический stream + профиль устройства» и не кэшируется как постоянное свойство файла.</div>
+  <h3>8.4 FTS4 и backup</h3>
+  <ul>
+    <li>FTS4 external content синхронизируется Room-триггерами; записи выполняются в content table.</li>
+    <li>Индекс содержит нормализованные title/album/artists/genres. Тесты обязаны покрывать кириллицу, регистр, «ё/е», prefix и специальные символы.</li>
+    <li>Миграции тестируются на реальных предыдущих схемах; при миграции внешнего FTS проверяется rebuild индекса.</li>
+    <li>JSON-backup имеет <code>schemaVersion</code>, checksum и сухой прогон валидации. Restore выполняется транзакционно, секреты не экспортируются.</li>
+    <li>M3U8 поддерживает UTF-8, относительные пути и отчёт о ненайденных треках.</li>
+  </ul>
+</section>
+
+<section id="scanner">
+  <h2>9. Библиотека и сканирование</h2>
+  <h3>9.1 Разрешения и корни</h3>
+  <ul>
+    <li>Android 13+: <code>READ_MEDIA_AUDIO</code> для чужих аудиофайлов в MediaStore.</li>
+    <li>Android 10–12: <code>READ_EXTERNAL_STORAGE</code>; собственные файлы приложения читаются без общего разрешения.</li>
+    <li>Первый корень — <code>Music/</code> через <code>RELATIVE_PATH</code>. Дополнительные корни и гарантированный доступ к дереву — SAF <code>ACTION_OPEN_DOCUMENT_TREE</code> с persistable permission.</li>
+    <li>«Все устройство» означает весь доступный <code>MediaStore.Audio</code>, а не обход Scoped Storage и не скрытые системные каталоги.</li>
+  </ul>
+  <h3>9.2 Поведение</h3>
+  <ol>
+    <li>При первом запуске объясняется доступ, затем сканируется <code>/Music</code>. До разрешения приложение остаётся работоспособным и позволяет выбрать SAF-папку.</li>
+    <li>При следующих запусках выполняется быстрая проверка MediaStore version/generation и инкрементальная синхронизация. Полный обход SAF при каждом входе запрещён.</li>
+    <li>Пользователь может запустить, отменить или повторить сканирование каждого корня, а также полное перечитывание тегов.</li>
+    <li>SAF traversal использует <code>DocumentsContract</code> и пакетные запросы; <code>DocumentFile.listFiles()</code> не применяется в горячем цикле.</li>
+    <li>Дифф: <code>(uri, size, mtime, generation где доступно)</code>. Ручной full rescan нужен для редких случаев изменения содержимого без надёжной смены признаков.</li>
+    <li>Обложки не извлекаются массово во время первого прохода. Сначала создаётся лёгкая библиотека, artwork загружается ограниченным пулом и кэшируется.</li>
+  </ol>
+  <h3>9.3 FD и жизненный цикл</h3>
+  <div class="fixbox">
+    <strong>Два безопасных паттерна:</strong>
+    <ul>
+      <li>Для декодирования Kotlin вызывает <code>detachFd()</code>; владение передаётся native и заканчивается одним <code>close</code>.</li>
+      <li>Для короткого чтения тегов предпочтителен <code>dup</code>: Rust/C++ владеет дубликатом, Kotlin закрывает исходный PFD через <code>.use</code>. Альтернатива — строго заимствованный FD без закрытия в Rust.</li>
+    </ul>
+    Нельзя передавать один и тот же int в два независимых владельца: fdsan превращает double-close/close-after-reuse в <code>SIGABRT</code>.
+  </div>
+  <ul>
+    <li>ContentObserver и MediaStore generation запускают coalesced sync, а не параллельные полные сканирования.</li>
+    <li>WorkManager применяется для длительных задач по выбранным ограничениям; активное ручное сканирование имеет видимый прогресс и cancellation.</li>
+    <li>Потеря SAF permission, unmount SD/USB и исчезновение файла не считаются удалением из библиотеки.</li>
+  </ul>
+</section>
+
+<section id="native">
+  <h2>10. Нативная архитектура</h2>
+  <div class="diagram">Kotlin AudioEngine
+       │ JNI, только control thread
+       ▼
+C++ NativeEngine
+       ├── OboeOutput
+       │     ├── open/reopen/close
+       │     ├── actual format/device diagnostics
+       │     ├── data callback ───────────────┐
+       │     └── error callback → control    │
+       │                                     │
+       └── Rust C ABI bridge                 │
+             ├── Decoder A / Decoder B       │
+             ├── Gapless + trim              │
+             ├── SRC (только DSP mode)       │
+             ├── DSP chain                   │
+             ├── preallocated PCM rings      │
+             └── fixed event queue           │
+                                             ▼
+                                  process into Oboe buffer
+                                  без JNI / I/O / mutex / heap</div>
+  <h3>10.1 Потоки</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Поток</th><th>Ответственность</th><th>Запрещено</th></tr></thead>
+    <tbody>
+      <tr><td>Kotlin application</td><td>Команды, Media3 state, очередь, настройки</td><td>Декодирование и ожидание native stream.</td></tr>
+      <tr><td>C++ control</td><td>Oboe lifecycle, route/reopen, C ABI commands</td><td>Блокировать UI; закрывать stream из error callback.</td></tr>
+      <tr><td>Rust decoder</td><td>I/O, decode, gapless preparation, SRC input</td><td>Изменять бизнес-очередь.</td></tr>
+      <tr><td>Oboe RT callback</td><td>Чтение ring, DSP, запись выходного буфера</td><td>JNI, I/O, mutex, allocate/free, logging, exceptions.</td></tr>
+      <tr><td>Event drain</td><td>Батчи native events в C++/Kotlin</td><td>Блокировка RT при переполнении событий.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>10.2 Границы ABI и владение</h3>
+  <ul>
+    <li>Через C ABI передаются только POD, дескрипторы и буферы с документированным временем жизни; C++ exceptions и Rust panics не пересекают границу.</li>
+    <li>C++ владеет Oboe stream. Rust не вызывает Oboe API и не закрывает его stream.</li>
+    <li>Rust владеет декодерами и DSP state. Коэффициенты публикуются через triple buffer, тяжёлые объекты освобождаются через control-side reclamation.</li>
+    <li>Очереди событий имеют фиксированную ёмкость; позиция и metering coalesce, критические ошибки сохраняются отдельно.</li>
+    <li>Каждый <code>load/release</code> идемпотентен либо возвращает явную ошибку состояния. Повторный release не должен падать.</li>
+  </ul>
+  <h3>10.3 Контроллер движка</h3>
+  <pre><code>interface AudioEngine {
+    fun load(source: TrackSource, startPositionMs: Long)
+    fun setNextTrack(source: TrackSource?, gapless: GaplessConfig)
+    fun play()
+    fun pause()
+    fun seekTo(positionMs: Long)
+    fun setOutputMode(mode: OutputMode)
+    fun applyDspConfig(config: DspConfig)       // игнорируется/отклоняется в Direct
+    fun setNormalVolume(volume: Float, rampMs: Int)
+    fun observeDiagnostics(): Flow&lt;OutputDiagnostics&gt;
+    fun release()
+}</code></pre>
+  <p>Конкретные native-сигнатуры проектируются на этапе реализации. Позиция внутри движка считается в frames, а не накапливается округлением миллисекунд.</p>
+</section>
+
+<section id="formats">
+  <h2>11. Форматы и декодеры</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Формат</th><th>Backend</th><th>Gapless / особые условия</th></tr></thead>
+    <tbody>
+      <tr><td>FLAC</td><td>Symphonia</td><td>Native PCM boundaries; reference tests 16/24-bit и разные sample rates.</td></tr>
+      <tr><td>MP3</td><td>Symphonia</td><td>Проверить Xing/LAME delay/padding; файлы без gapless metadata не обещают sample-accurate trim.</td></tr>
+      <tr><td>WAV / PCM</td><td>Symphonia PCM</td><td>Прямые границы; валидировать extensible/float/нечётные chunks.</td></tr>
+      <tr><td>ALAC</td><td>Symphonia + ISO/MP4</td><td>Декодер поддерживается; контейнерный gapless требует отдельной обработки metadata.</td></tr>
+      <tr><td>AAC-LC</td><td>Symphonia; AMediaCodec как fallback</td><td>MP4/M4A: iTunSMPB и delay/padding при наличии; нельзя объявлять автоматический gapless.</td></tr>
+      <tr><td>HE-AAC / HE-AACv2</td><td>AMediaCodec</td><td>Зависит от кодека устройства; capability query и тесты на каждом классе устройств.</td></tr>
+      <tr><td>Vorbis</td><td>Symphonia Ogg</td><td>Granule positions и конечная обрезка проверяются на reference corpus.</td></tr>
+      <tr><td>Opus</td><td>Ogg demux + libopus</td><td>OpusHead pre-skip, input/output sample rate и конечная обрезка по granule position.</td></tr>
+      <tr><td>CUE + image</td><td>CUE parser + decoder исходного образа</td><td>INDEX 00/01, PREGAP, несколько файлов, charset, offsets в frames.</td></tr>
+      <tr><td>DSF / DFF</td><td>Отдельный DSD reader</td><td>DSD→PCM, DoP или Native DSD; не смешивать с PCM-декодером.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="warnbox"><strong>Запасные декодеры не добавляются «на всякий случай».</strong> Каждый backend должен иметь владельца, тестовый corpus и причину существования. Некорректный файл возвращает ограниченную по размеру ошибку без panic, бесконечного цикла и исчерпания памяти.</div>
+  <ul>
+    <li>Lossy-файл нельзя назвать побитово идентичным исходной записи. Direct/bit-perfect относится к неизменной доставке PCM-результата декодера после установленного правила trim.</li>
+    <li>Для streamed/non-seekable источников существует отдельный Source contract; локальный seekable FD и сетевой pipe не имитируют друг друга.</li>
+    <li>Fuzzing и limits обязательны для demuxer, CUE, тегов, SDUI и сетевых ответов.</li>
+  </ul>
+</section>
+
+<section id="gapless">
+  <h2>12. Gapless, seek и SRC</h2>
+  <h3>12.1 Переходы</h3>
+  <ul>
+    <li>Следующий источник открывается заранее по команде Kotlin <code>setNextTrack</code>.</li>
+    <li>Decoder B готовит headers, первый пакет, delay/padding, ReplayGain и output format до окончания Decoder A.</li>
+    <li>Переход выполняется на границе PCM frame; никакой таймер «длительность минус секунда» не используется.</li>
+    <li>MP3/AAC/ALAC trim применяется только при достоверных metadata. Ошибочные значения ограничиваются длительностью потока.</li>
+    <li>При ручном next/previous предзагруженный источник используется только если queueItemId совпадает.</li>
+  </ul>
+  <h3>12.2 Изменение формата</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Ситуация</th><th>DSP / Shared</th><th>Direct PCM</th></tr></thead>
+    <tbody>
+      <tr><td>Одинаковые rate/channels/format</td><td>Gapless через общий output</td><td>Gapless без DSP, если тракт остаётся Direct</td></tr>
+      <tr><td>Разные sample rates</td><td>SRC к стабильному output rate либо согласованный reopen</td><td>Reopen; бесшовность не гарантируется. SRC запрещён</td></tr>
+      <tr><td>Разные channel masks / bit depth</td><td>Конвертация в DSP chain</td><td>Только поддерживаемое lossless представление, иначе reopen/fallback с индикацией</td></tr>
+      <tr><td>Новый Bluetooth/USB route</td><td>Переоткрытие и восстановление позиции</td><td>Direct отзывается до повторной проверки; нет скрытого сохранения статуса</td></tr>
+    </tbody>
+  </table></div>
+  <h3>12.3 Seek и ресемплер</h3>
+  <ul>
+    <li>Seek использует time↔frame mapping декодера, затем декодирует от ближайшего подходящего пакета/keyframes и отбрасывает лишнее.</li>
+    <li>После seek flush декодера, SRC и lookahead буферов выполняется по явной команде; старый звук не попадает в новый участок.</li>
+    <li>Rubato работает вне RT callback. Качество задаётся профилем; benchmark и listening/golden tests обязательны.</li>
+    <li>Переходы 44.1↔48 семейств не предполагают, что «кратная частота» автоматически решает качество или совместимость.</li>
+  </ul>
+</section>
+
+<section id="dsp">
+  <h2>13. DSP и real-time</h2>
+  <div class="decision"><strong>DSP существует только в обычном/DSP режиме.</strong> В Direct PCM весь chain обходится, включая цифровую громкость, fades, ReplayGain, EQ, limiter, SRC и dither.</div>
+  <h3>13.1 Порядок обработки</h3>
+  <ol>
+    <li>Input gain и de-click ramp при обычном старте/изменении режима.</li>
+    <li>ReplayGain + пользовательский preamp.</li>
+    <li>Объединённый банк AutoEQ/PEQ biquad, если профили выражены одним набором фильтров.</li>
+    <li>Дополнительные встроенные эффекты — только после отдельного включения.</li>
+    <li>Master volume ramp.</li>
+    <li>Lookahead limiter с заранее выделенными буферами и metering.</li>
+    <li>TPDF dither только при реальном понижении разрядности; не при записи float в shared mixer.</li>
+  </ol>
+  <h3>13.2 RT-правила</h3>
+  <ul>
+    <li><code>DspChain</code> и состояния <code>z1/z2</code> принадлежат только RT-потоку.</li>
+    <li>Control рассчитывает новые коэффициенты, не пересоздавая состояние фильтров.</li>
+    <li>Коэффициенты интерполируются 64–128 frames; при смене структуры chain используется заранее подготовленный безопасный переход.</li>
+    <li>Все ring/lookahead/convolution буферы имеют верхнюю границу и выделяются заранее.</li>
+    <li>NEON включается после correctness tests; SIMD и scalar выводы сравниваются в допустимом numeric tolerance.</li>
+    <li>Обещания «3–4× от NEON» и «10–15× меньше пробуждений» не являются требованиями: фиксируются только результаты benchmark.</li>
+  </ul>
+  <h3>13.3 Защита от перегрузки</h3>
+  <ul>
+    <li>UI показывает preamp, расчётный peak, gain reduction limiter и счётчик вероятного клиппинга.</li>
+    <li>Auto-preamp может предлагать отрицательный headroom, но не менять пользовательскую настройку скрытно.</li>
+    <li>True-peak limiting является отдельным дорогим профилем, а не бесплатным следствием обычного sample peak limiter.</li>
+    <li>При underrun выход заполняется корректной тишиной/безопасным переходом, счётчик увеличивается, RT не ждёт decoder.</li>
+  </ul>
+</section>
+
+<section id="replaygain">
+  <h2>14. ReplayGain</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Режим</th><th>Правило</th></tr></thead>
+    <tbody>
+      <tr><td>Off</td><td>Gain не применяется.</td></tr>
+      <tr><td>Track</td><td>Track gain; при отсутствии — нейтральный gain, при наличии scanner можно вычислить.</td></tr>
+      <tr><td>Album</td><td>Album gain; при отсутствии — fallback на Track gain с отображением фактического выбора.</td></tr>
+      <tr><td>Auto</td><td>Album для целого альбома, включая shuffle треков внутри него; Track для смешанной shuffle-очереди.</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>Явный пользовательский Track/Album не подменяется автоматически. Правила деградации относятся только к Auto.</li>
+    <li>Используются соответствующие track/album peak; один общий параметр <code>peak</code> недопустим.</li>
+    <li>При gapless смена gain происходит на границе трека без затрагивания предыдущего содержимого.</li>
+    <li>Album gain сохраняет относительную громкость дорожек альбома; Auto не обещает одинаковую громкость произвольных треков.</li>
+    <li>Scanner работает фоновыми ограниченными задачами, сохраняет результат в БД и не меняет исходный файл без отдельной команды.</li>
+    <li>ReplayGain несовместим с Direct PCM и потому отображается как неактивный, а не как включённый.</li>
+  </ul>
+</section>
+
+<section id="output-modes">
+  <h2>15. Режимы вывода</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Свойство</th><th>Normal / DSP</th><th>Direct PCM</th><th>DSD</th></tr></thead>
+    <tbody>
+      <tr><td>Декодирование</td><td>В PCM/float</td><td>В исходное PCM-представление декодера</td><td>DSD→PCM, DoP или Native</td></tr>
+      <tr><td>EQ / AutoEQ / ReplayGain</td><td>Да</td><td>Нет</td><td>Только DSD→PCM в DSP mode</td></tr>
+      <tr><td>SRC</td><td>По необходимости</td><td>Нет</td><td>Только DSD→PCM</td></tr>
+      <tr><td>Цифровая громкость</td><td>Да</td><td>Нет; аппаратная/аналоговая либо статус Direct теряется</td><td>Зависит от пути; DoP/Native — нет</td></tr>
+      <tr><td>Gapless</td><td>По форматной матрице</td><td>Только при непрерывном совместимом stream</td><td>Отдельная аппаратная матрица</td></tr>
+      <tr><td>Bluetooth</td><td>Да, с учётом кодека ОС</td><td>Не заявляется: Bluetooth выполняет собственное кодирование</td><td>Нет</td></tr>
+      <tr><td>AudioFocus duck</td><td>Плавный volume ramp</td><td>По умолчанию pause; digital duck завершил бы Direct</td><td>Pause либо безопасный аппаратный механизм</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Состояния UI</h3>
+  <pre><code>DSP ACTIVE
+DIRECT REQUESTED
+DIRECT ACTIVE — параметры подтверждены доступными Android/Oboe API
+BIT-PERFECT VALIDATED — маршрут прошёл внешнюю аппаратную проверку
+REOPENING
+FALLBACK — указана причина: route / mixer / rate / format / focus / capability
+DSD TO PCM / DoP / NATIVE DSD</code></pre>
+  <p>Состояние «validated» не появляется только из-за успешного <code>openStream</code>. Для него нужен результат проверки конкретной комбинации устройства и выхода.</p>
+</section>
+
+<section id="bitperfect">
+  <h2>16. Direct PCM и bit-perfect</h2>
+  <div class="dangerbox"><strong>Никакого универсального обещания для встроенного ЦАП.</strong> Android 14 документирует <code>AudioMixerAttributes</code> и <code>MIXER_BEHAVIOR_BIT_PERFECT</code> в контексте Lossless USB audio. Exclusive mode Oboe/AAudio сам по себе не означает bit-perfect.</div>
+  <h3>16.1 Последовательность на Android 14+ USB</h3>
+  <ol>
+    <li>Отследить <code>AudioDeviceInfo</code> и route changes. Для Bluetooth Direct не предлагать.</li>
+    <li>Получить <code>getSupportedMixerAttributes(device)</code> и выбрать реально поддерживаемые format/rate/channel mask.</li>
+    <li>Построить <code>AudioMixerAttributes</code> с <code>MIXER_BEHAVIOR_BIT_PERFECT</code>.</li>
+    <li>Вызвать <code>setPreferredMixerAttributes(attributes, device, mixerAttributes)</code>, проверить результат и зарегистрировать listener изменений.</li>
+    <li>Открыть Oboe на конкретный device ID с подходящими параметрами; применять Exclusive только когда это поддерживается и оправдано.</li>
+    <li>Считать фактические rate/format/channels/sharing/performance/buffer. Расхождение — диагностическое состояние, а не успех.</li>
+    <li>Обеспечить PCM passthrough без DSP и volume. При route/format change выполнить контролируемый reopen.</li>
+    <li>На release/смену конфигурации очистить preferred mixer attributes и освободить exclusive stream.</li>
+  </ol>
+  <h3>16.2 Android 10–13 и встроенные выходы</h3>
+  <ul>
+    <li>На Android 10–13 стандартный Android USB path не получает маркетинговую гарантию bit-perfect. Подтверждённый обходной путь — собственный UAC2 из раздела 17.</li>
+    <li>Для встроенного ЦАП допускается экспериментальный Direct только при наличии реальных поддерживаемых API и успешной аппаратной проверки.</li>
+    <li>Fallback в Normal/DSP происходит по выбранной пользователем политике: «всегда», «спросить» или «остановить».</li>
+    <li>Тост не является достаточной диагностикой: причина сохраняется в OutputDiagnostics и журнале без личных данных.</li>
+  </ul>
+  <h3>16.3 Проверка</h3>
+  <ul>
+    <li>System API проверяет запрошенную конфигурацию, но не заменяет независимый анализ сигнала.</li>
+    <li>Где возможно используются bit-exact loopback/capture и golden PCM; индикатор частоты на ЦАП сам по себе недостаточен.</li>
+    <li>Изменение системной громкости, эффектов, маршрута или mixer listener немедленно пересматривает статус.</li>
+    <li>Hot-unplug закрывает disconnected stream вне error callback, ставит воспроизведение на паузу по политике и не переносит статус на новый route.</li>
+  </ul>
+</section>
+
+<section id="dsd">
+  <h2>17. DSD, DoP и собственный UAC2</h2>
+  <h3>17.1 Три разных пути</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Путь</th><th>Что происходит</th><th>Ограничения</th></tr></thead>
+    <tbody>
+      <tr><td>DSD→PCM</td><td>DSD декодируется и фильтруется в PCM</td><td>Не bit-perfect DSD; DSP разрешён; нужен качественный low-pass и уровень.</td></tr>
+      <tr><td>DoP</td><td>DSD биты упаковываются с marker bytes в PCM-фреймы</td><td>PCM path не должен менять сэмплы; только ЦАП с DoP; опасен вывод как обычного PCM.</td></tr>
+      <tr><td>Native DSD</td><td>Raw DSD передаётся непосредственно compatible ЦАП</td><td>Собственный USB driver и аппаратная поддержка.</td></tr>
+    </tbody>
+  </table></div>
+  <p>При неизменных DoP-фреймах DSD payload остаётся неизменным. Поэтому DoP не описывается как «не bit-perfect по определению»; правильная индикация — <code>DSD over PCM</code> с отдельным результатом проверки тракта.</p>
+  <h3>17.2 Безопасность</h3>
+  <ul>
+    <li>DoP запрещён до подтверждения поддержки ЦАП; при сомнении используется DSD→PCM или отказ.</li>
+    <li>Переход PCM↔DoP↔Native выполняется с безопасным mute/reopen; старые marker bytes не попадают в новый поток случайно.</li>
+    <li>DSF/DFF reader ограничивает размеры metadata/chunks и не допускает integer overflow при расчёте длительности.</li>
+  </ul>
+  <h3>17.3 Собственный UAC2</h3>
+  <ul>
+    <li>Отдельный компонент после стабилизации PCM/DSP: USB permission, descriptors, alternate settings, isochronous transfers.</li>
+    <li>Adaptive/asynchronous clocking и feedback endpoint тестируются на конкретных чипах; нельзя предполагать один универсальный тайминг.</li>
+    <li>Hot-unplug, нехватка питания, отказ другого Android USB driver, suspend/resume и повторное подключение входят в тесты.</li>
+    <li>Аппаратная громкость использует доступные USB controls и имеет защиту от неожиданного максимума.</li>
+    <li>До появления тестового ЦАП задача имеет статус «реализация без аппаратной приёмки», а не «готово».</li>
+  </ul>
+</section>
+
+<section id="service">
+  <h2>18. Сервис, Bluetooth и Android Auto</h2>
+  <div class="decision"><strong>PlaybackService наследует MediaLibraryService и создаёт MediaLibrarySession.</strong> SimpleBasePlayer связывает системные команды с PlaybackController и внешним Oboe/Rust engine.</div>
+  <h3>18.1 Жизненный цикл</h3>
+  <ul>
+    <li>Foreground service type <code>mediaPlayback</code>, соответствующие permissions и обе service intent-filter для Media3/platform compatibility.</li>
+    <li>Default media notification provider и системные media controls; хрупкие кастомные RemoteViews не используются.</li>
+    <li>CommandButtons для избранного/shuffle и media button preferences — разные API и настраиваются отдельно.</li>
+    <li><code>ACTION_AUDIO_BECOMING_NOISY</code> и route callbacks: пауза при небезопасном переходе на динамик.</li>
+    <li>AudioFocus с delayed gain; Normal использует плавный duck, Direct по умолчанию ставится на паузу.</li>
+    <li>Очередь и позиция сохраняются; kill системы не создаёт неожиданное «зомби-воспроизведение».</li>
+  </ul>
+  <h3>18.2 Bluetooth</h3>
+  <ul>
+    <li>AVRCP metadata, play/pause/next/previous/seek там, где контроллер поддерживает команды.</li>
+    <li>Bluetooth profile — отдельный OutputDeviceProfile с собственным EQ/AutoEQ.</li>
+    <li>При смене Bluetooth-устройства выбирается его профиль по стабильному device key без раскрытия лишних идентификаторов в UI.</li>
+    <li>Bit-perfect не заявляется: ОС кодирует поток Bluetooth codec. Недоступные OEM codec details не выдумываются.</li>
+    <li>Тесты: reconnect, входящий звонок/duck, задержка metadata, отключение во время gapless, две пары наушников.</li>
+  </ul>
+  <h3>18.3 Android Auto и другие контроллеры</h3>
+  <ul>
+    <li>Дерево: Queue, Recent, Playlists, Albums, Artists, Genres, Folders и Search.</li>
+    <li>Реализуются <code>onGetLibraryRoot</code>, <code>onGetChildren</code>, <code>onGetItem</code>, <code>onSearch</code>, <code>onGetSearchResult</code> с pagination.</li>
+    <li>Результаты не загружают списком 10 000 элементов; artwork и metadata ограничиваются требованиями Auto.</li>
+    <li>Стандартный MediaSession покрывает базовые Wear OS/controller команды; отдельное Wear-приложение не входит в обязательный объём.</li>
+  </ul>
+</section>
+
+<section id="plugins">
+  <h2>19. Плагины и скины</h2>
+  <h3>19.1 Разделение возможностей</h3>
+  <div class="grid-2">
+    <div class="card green">
+      <h3>APK-плагины</h3>
+      <ul>
+        <li>Streaming/cloud, WebDAV, Subsonic, Jellyfin и другие источники.</li>
+        <li>Метаданные, тексты, обложки и идентификаторы.</li>
+        <li>Декларативные каталоги через SDUI.</li>
+        <li>Скины как resources + JSON tokens.</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>Только доверенное ядро</h3>
+      <ul>
+        <li>DSP, декодеры, SRC, limiter и RT-визуализация.</li>
+        <li>Oboe callback и владение native buffers.</li>
+        <li>Очередь, backup и управление разрешениями.</li>
+      </ul>
+    </div>
+  </div>
+  <p>Binder не используется на каждый аудиобуфер. Источник передаётся как authenticated URL/request description либо FD/pipe с backpressure, явным закрытием и cancellation.</p>
+  <h3>19.2 Discovery и доверие</h3>
+  <ol>
+    <li><code>PackageManager.queryIntentServices</code> по публичному action; необходимые <code>&lt;queries&gt;</code> объявлены для Android 11+.</li>
+    <li>Проверяются package, exported component, SDK major/minor, capabilities и signature hash.</li>
+    <li>При первом включении пользователь видит разработчика, запрошенные capabilities и источник установки.</li>
+    <li>Смена подписи/major SDK отключает плагин до повторного подтверждения.</li>
+    <li>Bind имеет timeout, DeathRecipient, ограничение размеров ответов и защиту от бесконечных стримов.</li>
+    <li>Плагин выполняется в процессе своего APK/UID, но это не отменяет валидацию его данных.</li>
+  </ol>
+  <h3>19.3 SDUI</h3>
+  <ul>
+    <li>Белый список компонентов: sections, lists, cards, text, images, search, toggles и ограниченные navigation actions.</li>
+    <li>Никаких arbitrary Compose, DEX, reflection, JavaScript, arbitrary intents и неограниченных URI.</li>
+    <li>Размер schema, глубина вложенности, число элементов и строки ограничены; рендер устойчив к malformed input.</li>
+    <li>Статический route содержит pluginPackage/path; динамический код в процесс плеера не загружается.</li>
+  </ul>
+  <h3>19.4 Скины</h3>
+  <ul>
+    <li>Только цвета, размеры, радиусы, typography scale и разрешённые resources.</li>
+    <li>Токены валидируются по schema; небезопасные contrast/size не ломают доступность без предупреждения.</li>
+    <li>CompositionLocalProvider применяет тему реактивно; сбой скина возвращает встроенную тему.</li>
+    <li>Скин не меняет аудиологику и не получает сетевых/файловых capabilities автоматически.</li>
+  </ul>
+</section>
+
+<section id="metadata">
+  <h2>20. Метаданные и сеть</h2>
+  <h3>20.1 Источники</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Данные</th><th>Порядок</th><th>Поведение</th></tr></thead>
+    <tbody>
+      <tr><td>Теги/обложки</td><td>Встроенные → sidecar/локальные → MusicBrainz/Cover Art Archive</td><td>Preview и ручное применение для онлайн-замены.</td></tr>
+      <tr><td>Тексты</td><td>Embedded → .lrc → LRCLIB/плагины</td><td>Plain/synced, пользовательский offset, кэш.</td></tr>
+      <tr><td>Идентификация</td><td>Существующие tags → Chromaprint + AcoustID → MusicBrainz</td><td>Несколько candidates с confidence, без молчаливой перезаписи.</td></tr>
+      <tr><td>Микрофон</td><td>Отдельный явный сценарий, не WorkManager по умолчанию</td><td>RECORD_AUDIO, foreground/visible UX, согласие и отдельная политика приватности.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>20.2 Сетевые правила</h3>
+  <ul>
+    <li>Обязательные User-Agent/contact, rate limit, timeout, retry с jitter и exponential backoff.</li>
+    <li>429/5xx не запускают шторм запросов; кэшируются negative results на ограниченное время.</li>
+    <li>Размер ответа, глубина JSON/XML, изображения и redirect ограничены. TLS не отключается.</li>
+    <li>Пакетное обогащение — только по включённой опции; charging/unmetered/battery constraints настраиваются.</li>
+    <li>При старте воспроизведения тяжёлая фоновая работа приостанавливается по ресурсной политике, а не потому что для AcoustID нужен микрофон.</li>
+    <li>Секреты хранятся в механизме защищённого хранения, не в Room backup, SDUI или логах.</li>
+  </ul>
+  <h3>20.3 Редактор тегов</h3>
+  <ul>
+    <li>Сначала read-only preview: старое/новое значение, источник и список затронутых файлов.</li>
+    <li>Запись в MediaStore требует соответствующего write consent; SAF write permission проверяется отдельно.</li>
+    <li>Ошибка части пакета не выдаётся за полный успех; создаётся отчёт и возможность повторить failed items.</li>
+    <li>После записи обновляются Room/FTS и artwork cache без удаления истории.</li>
+  </ul>
+</section>
+
+<section id="performance">
+  <h2>21. Память, скорость и батарея</h2>
+  <h3>21.1 Предварительные бюджеты</h3>
+  <p class="muted">Это инженерные цели до выбора точной модели эталонного телефона. После первых измерений значения версионируются, но не заменяются словами «максимально быстро».</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Метрика</th><th>Начальная цель</th><th>Метод</th></tr></thead>
+    <tbody>
+      <tr><td>Поиск по 10 000 треков</td><td>p95 ≤ 100 мс после прогретого индекса</td><td>Макробенчмарк DAO + UI без искусственного main-thread delay.</td></tr>
+      <tr><td>Реакция UI на play/pause</td><td>Визуальный отклик ≤ 100 мс; фактический старт измеряется отдельно</td><td>Timestamp команды, native state и первого frame.</td></tr>
+      <tr><td>Прокрутка</td><td>Без I/O в main; стабильные кадры на эталонном mid-range</td><td>Macrobenchmark/JankStats, реальные обложки и 10k items.</td></tr>
+      <tr><td>RT</td><td>0 underruns в контролируемом 2-часовом тесте профиля</td><td>Счётчики xrun, thermal state, buffer diagnostics.</td></tr>
+      <tr><td>Память</td><td>Ограниченные artwork/decoder/native caches, 0 роста после повторных циклов</td><td>Heap/native allocations, FD count, leak tests.</td></tr>
+      <tr><td>Батарея</td><td>Замер Normal/DSP и отдельных профилей до обещаний пользователю</td><td>Экран выключен, фиксированная громкость/плейлист, длительный прогон и сравнение конфигураций.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>21.2 Основные оптимизации</h3>
+  <ul>
+    <li>Oboe <code>PowerSaving</code> для обычного music playback, если фактический stream его поддерживает; Direct/Exclusive настраивается отдельно.</li>
+    <li>Буферы подбираются по underrun/latency/power измерениям, а не фиксированные 40–80 мс для всех устройств.</li>
+    <li>Программное декодирование может потреблять больше энергии аппаратного. MediaCodec/offload рассматриваются по результатам замера без нарушения DSP/Direct семантики.</li>
+    <li>Artwork downsample, bounded memory/disk cache, paging списков и никаких полных Bitmap в модели списка.</li>
+    <li>60 Hz position не записывается в БД/DataStore и не рекомпонует весь экран.</li>
+    <li>Release build, R8/ProGuard и native symbols проверяются отдельно; debug benchmark не считается результатом.</li>
+  </ul>
+</section>
+
+<section id="reliability">
+  <h2>22. Надёжность и безопасность</h2>
+  <h3>22.1 Ошибки и восстановление</h3>
+  <ul>
+    <li>Единый taxonomy: permission, missing file, unsupported codec, corrupt data, network, route, disconnected, underrun, internal.</li>
+    <li>Ошибка одного трека не роняет service и не создаёт бесконечный autoplay-next loop; есть лимит последовательных ошибок.</li>
+    <li>Native panic/exception перехватывается на FFI boundary; crash не маскируется ложным «unsupported format».</li>
+    <li>Room migrations и backup restore имеют rollback; corrupted DataStore имеет documented recovery.</li>
+    <li>Disconnect Oboe обрабатывается control thread; никакого close из error callback с последующим deadlock.</li>
+    <li>Приложение корректно работает при отказе в разрешениях, отключённой сети, restricted battery и process death.</li>
+  </ul>
+  <h3>22.2 Безопасность</h3>
+  <ul>
+    <li>Все внешние файлы, теги, CUE, изображения, SDUI и AIDL payloads считаются недоверенными.</li>
+    <li>Нет arbitrary path из plugin/network: используются разрешённые URI/FD и capability checks.</li>
+    <li>PendingIntent/Intent flags и exported components проходят явный security review.</li>
+    <li>Логи не содержат URL credentials, tokens, полные пользовательские пути по умолчанию и содержимое текстов песен.</li>
+    <li>Release включает dependency/license inventory: Rust MPL/MIT/Apache, Oboe, Media3, libopus и остальные компоненты.</li>
+    <li>Никакого скрытого кода для обхода политики Store, разрешений Android или защиты сервисов.</li>
+  </ul>
+</section>
+
+<section id="testing">
+  <h2>23. Тестирование и приёмка</h2>
+  <h3>23.1 Автоматические уровни</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Уровень</th><th>Обязательные проверки</th></tr></thead>
+    <tbody>
+      <tr><td>Kotlin unit</td><td>QueueManager property tests, shuffle/repeat, restore, scanner diff, metadata merge, settings migration.</td></tr>
+      <tr><td>Room</td><td>Все миграции, FTS triggers/rebuild, кириллица, CUE uniqueness, playlist rebalance, backup rollback.</td></tr>
+      <tr><td>Rust</td><td>Decoder vectors, trim, granule mapping, PEQ vs reference, RG, SRC, limiter, seek, malformed inputs.</td></tr>
+      <tr><td>C++</td><td>Oboe lifecycle, reconnect, C ABI ownership, error callback routing, JNI stress.</td></tr>
+      <tr><td>Golden audio</td><td>PCM hashes для passthrough и numeric tolerance для DSP; sample-accurate gapless corpus.</td></tr>
+      <tr><td>RT</td><td>Allocation/lock detection в callback, buffer underruns, fixed event overflow, длительные soak tests.</td></tr>
+      <tr><td>Fuzz</td><td>Demuxers, CUE, tags, images, SDUI, plugin payloads, backup.</td></tr>
+      <tr><td>Android instrumented</td><td>Permissions 29/30/31/32/33/34+, process death, SAF revoke, MediaStore changes, notification.</td></tr>
+      <tr><td>UI</td><td>Compose critical flows, TalkBack, 200% font, small/large screens, темы и skin fallback.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>23.2 Аппаратная матрица</h3>
+  <ul>
+    <li><strong>Первый стенд:</strong> телефон пользователя + Bluetooth. Фиксируются модель, Android build, наушники и основные форматы до начала audio acceptance.</li>
+    <li><strong>Минимум ОС:</strong> реальное Android 10 устройство и современное Android 14+ устройство; эмулятор не заменяет audio route tests.</li>
+    <li><strong>OEM:</strong> по возможности Pixel и Samsung/Xiaomi для media controls, background и Bluetooth.</li>
+    <li><strong>USB/DSD:</strong> отдельный список телефон/кабель/питание/ЦАП/прошивка/чип. Без него BP-01 и DSD-01 не отмечаются как принятые.</li>
+  </ul>
+  <h3>23.3 Обязательные ручные сценарии</h3>
+  <ol>
+    <li>Холодный старт → разрешение → /Music → воспроизведение → очередь → force stop → восстановление без автозвука.</li>
+    <li>10k tracks, поиск на кириллице, scoped folder, изменение/переименование/удаление/возврат файла.</li>
+    <li>Gapless альбом с разными кодеками и отдельно 44.1→96 в Normal и Direct.</li>
+    <li>Bluetooth connect/disconnect, звонок/focus, noisy, lock screen и Auto controller.</li>
+    <li>EQ drag/AutoEQ/ReplayGain/limiter без щелчков; смена output profile на лету.</li>
+    <li>Плагин crash/timeout/update signature/revoke; malformed SDUI и большой payload.</li>
+    <li>Backup → переустановка/другой flavor → restore → отчёт о несовместимых элементах.</li>
+  </ol>
+</section>
+
+<section id="roadmap">
+  <h2>24. План реализации полного объёма</h2>
+  <p>Все подсистемы остаются обязательными. Даты назначаются после измерения скорости первых двух этапов; прежняя оценка 13–17 недель для всего объёма не используется.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Этап</th><th>Содержание</th><th>Gate</th></tr></thead>
+    <tbody>
+      <tr><td><strong>0. Воспроизводимая среда</strong></td><td>Локальные JDK/Android SDK/Rust/NDK, Gradle wrapper, CMake/Oboe, flavors, CI, baseline tests.</td><td>Чистая машина собирает Store/Direct debug APK по инструкции.</td></tr>
+      <tr><td><strong>1. Каркас и данные</strong></td><td>Модули, Compose/Hilt/Navigation, Room/FTS, QueueManager, backup schema, native C ABI skeleton.</td><td>Миграции, queue property tests, Rust/C++/JNI smoke tests.</td></tr>
+      <tr><td><strong>2. Библиотека</strong></td><td>MediaStore/SAF, инкрементальный scanner, CUE, папки, списки, поиск, artwork cache.</td><td>10k corpus, permissions и lifecycle tests, нет дублей/FD leaks.</td></tr>
+      <tr><td><strong>3. Базовый звуковой путь</strong></td><td>FLAC/MP3/WAV/ALAC/AAC/Vorbis/Opus, Oboe shared output, seek, current/next, gapless corpus.</td><td>Golden PCM, длительное воспроизведение, нет RT нарушений.</td></tr>
+      <tr><td><strong>4. OS и пользовательские списки</strong></td><td>MediaLibraryService, Bluetooth/Auto/focus/noisy, persistent queue, playlists, history, M3U8, sleep timer.</td><td>Аппаратный Bluetooth сценарий, process death, Auto browse/search.</td></tr>
+      <tr><td><strong>5. DSP</strong></td><td>PEQ/AutoEQ, RG/Auto/scanner, SRC, limiter/dither, АЧХ, output profiles.</td><td>Reference DSP, RT soak, профили переключаются без щелчков.</td></tr>
+      <tr><td><strong>6. Метаданные</strong></td><td>Lyrics/LRCLIB, covers, MusicBrainz, AcoustID, tag editor, сетевые настройки и backup UI.</td><td>Rate limits/privacy/offline tests, preview и restore проходят.</td></tr>
+      <tr><td><strong>7. Direct PCM</strong></td><td>Android 14+ USB mixer attributes, Oboe route/format negotiation, Direct passthrough, diagnostics.</td><td>Аппаратная USB матрица; до неё статус «ожидает hardware acceptance».</td></tr>
+      <tr><td><strong>8. Плагины и скины</strong></td><td>SDK/AIDL/FD/SDUI, permissions, discovery, Store/Direct различия, skin tokens.</td><td>Security/fuzz/version/death tests и два примера расширений.</td></tr>
+      <tr><td><strong>9. DSD и UAC2</strong></td><td>DSF/DFF, DSD→PCM, DoP, Native DSD, isochronous/feedback, hardware volume.</td><td>Каждая комбинация телефон/ЦАП принята отдельно; безопасность DoP подтверждена.</td></tr>
+      <tr><td><strong>10. Release</strong></td><td>Performance/battery tuning, accessibility, licenses, signing/update/migration, полное regression.</td><td>Store и Direct воспроизводимо собираются; полный DoD выполнен.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="warnbox"><strong>Запрещённая последовательность:</strong> сначала SDUI, скины, DSD и десятки пустых модулей, а затем выясняется, что локальный FLAC не играет без xrun. Архитектурные интерфейсы закладываются заранее, но приёмка идёт от работающего аудиотракта к платформе.</div>
+</section>
+
+<section id="done">
+  <h2>25. Definition of Done</h2>
+  <div class="card green">
+    <ul>
+      <li>Все требования раздела 2 имеют реализацию, тест и статус: принято / заблокировано конкретным оборудованием / отклонено согласованным изменением.</li>
+      <li>Store- и Direct-сборки собираются из чистого checkout с локальными toolchains и закреплёнными версиями.</li>
+      <li>Локальная библиотека на 10k треков, поиск, плейлисты, очередь и process death проходят приёмку.</li>
+      <li>Все заявленные форматы имеют тестовый corpus; gapless ограничения задокументированы и видны.</li>
+      <li>RT callback не содержит запрещённых операций; soak tests не выявляют утечек и неприемлемых xruns.</li>
+      <li>Bluetooth/Auto/AudioFocus/noisy проверены на реальном телефоне.</li>
+      <li>UI не приписывает bit-perfect Bluetooth или неподтверждённому встроенному/USB тракту.</li>
+      <li>USB/DSD отмечены готовыми только для фактически проверенных устройств.</li>
+      <li>Backup/restore, M3U8 и миграции не приводят к потере данных.</li>
+      <li>Плагины не исполняют чужой код в процессе плеера, а capabilities и updates контролируются пользователем.</li>
+      <li>Доступность, приватность, лицензии, подпись и обновления проверены для обоих каналов.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="open">
+  <h2>26. Открытые решения и changelog</h2>
+  <h3>26.1 Не блокируют начало каркаса</h3>
+  <ul>
+    <li>Название приложения, applicationId, иконка и окончательная визуальная тема.</li>
+    <li>Точная модель эталонного телефона, версия Android, Bluetooth-наушники и состав музыкального corpus.</li>
+    <li>Модели USB-ЦАП и кабели для этапов Direct/DSD/UAC2.</li>
+    <li>AcoustID client key и контакт для MusicBrainz User-Agent.</li>
+    <li>Одинаковый или разный applicationId для Store/Direct, схема подписи и миграция обновлений.</li>
+    <li>Окончательный набор ABI после измерения спроса; arm64-v8a является обязательным.</li>
+  </ul>
+  <h3>26.2 Основные исправления v3.0</h3>
+  <ul>
+    <li>Заменена ложная универсальная гарантия bit-perfect встроенного ЦАП на проверяемую модель Direct/validated.</li>
+    <li>Исправлена трактовка DoP; Direct отделён от DSP, цифровой громкости и SRC.</li>
+    <li>Выбран реальный стек Oboe C++ + Rust вместо противоречия «чистый Rust + Oboe».</li>
+    <li>Уточнены Symphonia AAC-LC/HE-AAC/Opus и gapless ISO/MP4.</li>
+    <li>Назначен единственный владелец очереди; MediaSession заменён на MediaLibraryService для Auto.</li>
+    <li>AcoustID отделён от микрофонного Shazam-сценария.</li>
+    <li>Добавлены output profiles, history, multi-value tags, ReplayGain scanner, backup и tag editing.</li>
+    <li>Для плагинов добавлены capabilities, signature pinning, timeouts, limits и package visibility.</li>
+    <li>Убраны гарантированные коэффициенты энергопотребления/SIMD без измерений.</li>
+    <li>Согласована нумерация версии документа; незавершённые R1/R2/R4/R6 заменены цельными разделами.</li>
+  </ul>
+  <h3>26.3 Первичные источники</h3>
+  <ul>
+    <li><a href="https://developer.android.com/about/versions/14/features#lossless-usb-audio">Android 14 — Lossless USB audio</a></li>
+    <li><a href="https://developer.android.com/reference/android/media/AudioMixerAttributes">AudioMixerAttributes</a> и <a href="https://developer.android.com/reference/android/media/AudioManager">AudioManager</a></li>
+    <li><a href="https://developer.android.com/ndk/guides/audio/aaudio/aaudio">AAudio guide</a> и <a href="https://github.com/google/oboe">Oboe</a></li>
+    <li><a href="https://docs.rs/symphonia/latest/symphonia/">Symphonia — форматы, кодеки и gapless</a></li>
+    <li><a href="https://developer.android.com/media/media3/session/serve-content">Media3 — MediaLibraryService</a> и <a href="https://developer.android.com/reference/androidx/media3/common/SimpleBasePlayer">SimpleBasePlayer</a></li>
+    <li><a href="https://developer.android.com/training/data-storage/shared/media">Android shared media storage и разрешения</a></li>
+    <li><a href="https://developer.android.com/reference/androidx/room/Fts4">Room FTS4 external content</a></li>
+    <li><a href="https://acoustid.org/chromaprint">AcoustID Chromaprint</a> и <a href="https://dsd-guide.com/dop-open-standard">DoP Open Standard</a></li>
+  </ul>
+</section>
+
+<footer>
+  Аудиоплеер для Android · Продуктовая и архитектурная спецификация · v3.0 · 3 ноября 2026<br>
+  Полный объём продукта · Kotlin/Compose · Oboe C++ · Rust · Store + Direct
+</footer>
+
+</div>
+</body>
+</html>
